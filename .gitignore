@@ -1,0 +1,16 @@
+dist/
+node_modules/
+artifacts/
+.DS_Store
+
+# Local development notes and manual checks
+/docs/development.md
+/scripts/ascending-exact.mjs
+/scripts/balance.mjs
+/scripts/ladder-balance.mjs
+/tests/audio-lifecycle.py
+/tests/audio.py
+/tests/medals-share.py
+/tests/mobile.py
+/tests/release.py
+/tests/theme.py

@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="ja" data-release="2026.10.03-2">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f6f5ee" />
+    <meta
+      name="description"
+      content="5枚、5回、一瞬の逆転。1〜5の札を一度ずつ使い、5人のCPUに挑むカードデュエル。"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23090e1b'/%3E%3Cpath d='M32 5Q34 30 59 32Q34 34 32 59Q30 34 5 32Q30 30 32 5' fill='%23a1f6d6'/%3E%3C/svg%3E"
+    />
+    <script>
+      // Resolve before CSS paints; preference never shares the game-progress key.
+      (() => {
+        let preference = "auto";
+        try {
+          const saved = localStorage.getItem("last-trump-theme");
+          if (["auto", "light", "dark"].includes(saved)) preference = saved;
+        } catch {}
+        const dark =
+          preference === "dark" ||
+          (preference === "auto" &&
+            matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.dataset.themePreference = preference;
+        document.documentElement.dataset.theme = dark ? "dark" : "light";
+        document.querySelector('meta[name="theme-color"]').content = dark
+          ? "#0c151c"
+          : "#f6f5ee";
+      })();
+    </script>
+    <title>Duel Five</title>
+    <link rel="stylesheet" href="./src/style.css?v=2026.10.03-2" />
+
+    <!-- Static social metadata: available to crawlers without JavaScript. -->
+    <link rel="canonical" href="https://monnouchi.github.io/duel-five/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:site_name" content="Duel Five" />
+    <meta property="og:title" content="Duel Five" />
+    <meta
+      property="og:description"
+      content="5枚、5回、一瞬の逆転。1〜5の札を一度ずつ使い、5人のCPUに挑むカードデュエル。"
+    />
+    <meta property="og:url" content="https://monnouchi.github.io/duel-five/" />
+    <meta
+      property="og:image"
+      content="https://monnouchi.github.io/duel-five/assets/social-preview.png"
+    />
+    <meta
+      property="og:image:secure_url"
+      content="https://monnouchi.github.io/duel-five/assets/social-preview.png"
+    />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Duel Five。緑色の1と赤色の5が向き合うカードデュエル。"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Duel Five" />
+    <meta
+      name="twitter:description"
+      content="5枚、5回、一瞬の逆転。1〜5の札を一度ずつ使い、5人のCPUに挑むカードデュエル。"
+    />
+    <meta
+      name="twitter:image"
+      content="https://monnouchi.github.io/duel-five/assets/social-preview.png"
+    />
+    <meta
+      name="twitter:image:alt"
+      content="Duel Five。緑色の1と赤色の5が向き合うカードデュエル。"
+    />
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <div class="brand" aria-label="Duel Five">
+          <span class="brand-icon">✦</span
+          ><span>Duel Five<small>5枚、5回の勝負</small></span>
+        </div>
+        <div class="tools">
+          <select
+            id="theme"
+            class="icon-button theme-select"
+            aria-label="配色（Autoは端末設定に追従）"
+            title="配色"
+          >
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+          <button
+            id="sound"
+            class="icon-button"
+            aria-pressed="false"
+            aria-label="音をオンにする"
+          >
+            音 OFF</button
+          ><button id="help" class="icon-button" aria-label="ルールを開く">
+            ?
+          </button>
+        </div>
+      </header>
+      <section class="campaign-bar" aria-label="対戦相手と通算戦績">
+        <span id="opponent-avatar" class="opponent-avatar" role="img"></span
+        ><strong id="opponent-name"></strong><span id="record"></span>
+        <span id="crown-record" hidden></span>
+      </section>
+      <section
+        id="completion"
+        class="completion"
+        hidden
+        aria-labelledby="completion-title"
+      >
+        <p class="completion-eyebrow">Duel Five · FINALE</p>
+        <div class="completion-crown" aria-hidden="true">♛</div>
+        <h1 id="completion-title" tabindex="-1">五人制覇</h1>
+        <p id="completion-story" class="completion-story">
+          最後の一枚が、王冠をもたらした。
+        </p>
+        <p id="completion-path" class="completion-path">
+          先鋒 ✓　次鋒 ✓　中堅 ✓　副将 ✓　大将 ✓
+        </p>
+        <p id="completion-score"></p>
+        <div class="completion-seal">
+          <span>獲得した王冠</span><strong id="completion-count"></strong>
+        </div>
+        <p id="completion-record"></p>
+        <p id="completion-end" class="completion-end">
+          これにて終幕。おつかれさまでした。
+        </p>
+        <small>このまま閉じて大丈夫です。</small>
+      </section>
+      <section class="match-meta">
+        <span class="eyebrow"></span><span id="round-label">ROUND 01 / 05</span>
+      </section>
+      <section class="scoreboard" aria-label="得点">
+        <div>
+          <span class="you-dot"></span> YOU <strong id="player-score">0</strong>
+        </div>
+        <span class="score-divider">:</span>
+        <div>
+          <strong id="cpu-score">0</strong> CPU <span class="cpu-dot"></span>
+        </div>
+      </section>
+      <div
+        class="round-track"
+        id="round-track"
+        aria-label="各ラウンドの得点"
+      ></div>
+      <section class="opponent">
+        <div class="section-label">
+          <span>CPUの残り札</span><span class="locked">◆ 選択済み</span>
+        </div>
+        <div id="cpu-hand" class="cpu-hand"></div>
+      </section>
+      <section class="arena" id="arena" aria-label="対戦フィールド">
+        <div class="orbit orbit-one"></div>
+        <div class="orbit orbit-two"></div>
+        <div class="arena-cross"></div>
+        <div class="duel-side player-side">
+          <span id="player-label" class="duel-label">YOU</span>
+          <div id="player-stage" class="stage-card"></div>
+        </div>
+        <div class="versus">VS<small id="stake">1 POINT</small></div>
+        <div class="duel-side cpu-side">
+          <span id="cpu-label" class="duel-label">CPU</span>
+          <div id="cpu-stage" class="stage-card"></div>
+        </div>
+        <div id="card-effect" class="card-effect" aria-hidden="true"></div>
+        <div id="fx" class="fx" aria-hidden="true"></div>
+        <div id="impact" class="impact" aria-hidden="true"></div>
+      </section>
+      <section
+        class="message"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        <span id="message-kicker">カードを選ぶ</span>
+        <h1 id="message-title">下のカードを1枚タップ。</h1>
+        <p id="message-detail">選んだ札をもう一度タップすると勝負します。</p>
+      </section>
+      <section class="player-zone">
+        <div class="section-label">
+          <span
+            ><span id="hand-title">あなたの手札</span>
+            <small id="hand-count">5 CARDS</small></span
+          ><span id="hand-hint">タップで選択</span>
+        </div>
+        <div id="hand" class="hand"></div>
+      </section>
+      <button id="action" class="primary" disabled>
+        <span>一枚選んでください</span><span aria-hidden="true">↗</span>
+      </button>
+
+      <div id="share-result" class="share-result" hidden>
+        <button id="share-open" class="share-toggle" aria-label="結果を共有">
+          共有
+        </button>
+      </div>
+      <section class="history-zone">
+        <div class="section-label">
+          <span id="history-title">公開された札</span
+          ><span id="history-key">あなた / CPU</span>
+        </div>
+        <ol id="history" class="history"></ol>
+      </section>
+    </main>
+    <dialog id="rules" aria-labelledby="rules-title">
+      <div class="dialog-heading">
+        <div>
+          <p class="dialog-game-title">Duel Five</p>
+          <h2 id="rules-title">5人勝ち抜きの遊び方</h2>
+        </div>
+        <button
+          id="close-rules"
+          autofocus
+          class="icon-button"
+          aria-label="ルールを閉じる"
+        >
+          ×
+        </button>
+      </div>
+      <p id="opponent-guide" class="opponent-guide"></p>
+      <p class="campaign-rule">
+        先鋒 → 次鋒 → 中堅 → 副将 → 大将<br />1人と5ラウンド。勝てば次へ、負けたら先鋒へ。引分は同じ相手と再戦。
+      </p>
+      <div class="rule-example">
+        <span>1</span><strong>›</strong><span>5</span
+        ><small>1だけは5に勝つ</small>
+      </div>
+      <ol class="quick-rules">
+        <li>
+          <b>同じ1〜5を、一度ずつ使う。</b
+          ><br />大きい数字が勝利。同じ数字は0点。
+        </li>
+        <li>
+          <b>5ラウンドの合計点で決着。</b><br />第1〜3ラウンドは1点。<strong
+            >第4・5ラウンドは2点。</strong
+          ><br />合計が同点なら引き分け。
+        </li>
+        <li>
+          <b>札をタップして選ぶ。</b><br /><strong
+            >同じ札をもう一度タップで勝負。</strong
+          ><br />別の札をタップすれば選び直せます。
+        </li>
+      </ol>
+      <p class="fair-note">
+        第5ラウンドは残り1枚で自動決着。CPUはあなたが選ぶ前に札を確定します。
+      </p>
+      <p id="build-version" class="build-note">
+        HTML 2026.10.03-2 / JS確認待ち
+      </p>
+      <button id="ready" class="primary">遊ぶ <span>→</span></button>
+    </dialog>
+    <dialog id="share-dialog" aria-labelledby="share-title">
+      <div class="dialog-heading">
+        <h2 id="share-title">Duel Fiveの結果</h2>
+        <button
+          id="share-close"
+          class="icon-button"
+          aria-label="共有画面を閉じる"
+        >
+          ×
+        </button>
+      </div>
+      <p>結果の画像や文章を、お好みの場所へ。</p>
+      <div class="share-actions">
+        <button id="share-image">画像を共有</button
+        ><button id="save-image">画像保存</button
+        ><button id="copy-result">文章をコピー</button>
+      </div>
+      <p id="share-status" role="status"></p>
+      <textarea
+        id="share-text"
+        readonly
+        aria-label="共有する結果の文章"
+      ></textarea>
+    </dialog>
+    <script type="module" src="./src/app.js?v=2026.10.03-2"></script>
+  </body>
+</html>
